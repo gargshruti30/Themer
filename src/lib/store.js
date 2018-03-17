@@ -68,9 +68,18 @@ export const reducers = {
       CLEAR_PENDING_THEME: state => ({ ...state, pendingTheme: null }),
       SET_SAVED_THEMES: (state, { payload: { savedThemes } }) => ({
         ...state,
-        savedThemes
+        savedThemes: Object.entries(savedThemes).reduce(
+          (acc, [key, savedTheme]) => ({
+            ...acc,
+            [key]: { ...savedTheme, theme: normalizeTheme(savedTheme.theme) }
+          }),
+          {}
+        )
       }),
-      SET_SAVED_THEMES_PAGE: (state, { payload: { page: savedThemesPage } }) => ({
+      SET_SAVED_THEMES_PAGE: (
+        state,
+        { payload: { page: savedThemesPage } }
+      ) => ({
         ...state,
         savedThemesPage
       }),
@@ -120,7 +129,7 @@ export const reducers = {
         }),
         SET_BACKGROUND: (state, { payload: { url } }) => ({
           ...state,
-          images: { ...state.images, headerURL: url }
+          images: { ...state.images, additional_backgrounds: [url] }
         })
       },
       normalizeTheme()

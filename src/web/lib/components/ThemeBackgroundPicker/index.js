@@ -2,12 +2,9 @@ import React from "react";
 import classnames from "classnames";
 import onClickOutside from "react-onclickoutside";
 
-import { colorToCSS } from "../../../../lib/themes";
+import { colorToCSS, bgImages } from "../../../../lib/themes";
 import Metrics from "../../../../lib/metrics";
-
 import "./index.scss";
-
-const bgImages = require.context("../../../../images/patterns/", false, /bg-.*\.svg/);
 
 const Background = ({
   src,
@@ -54,13 +51,13 @@ class ThemeBackgroundPicker extends React.Component {
     const { selected } = this.state;
     const accentcolor = colorToCSS(theme.colors.accentcolor);
     // Note: default theme initializes with no bg so we have to check before adding bg to CSS
-    const backgroundSwatch = theme.images.headerURL
-      ? `url(${bgImages(theme.images.headerURL)})`
-      : "";
+    const background = theme.images.additional_backgrounds[0];
+    const backgroundSwatch = background ? `url(${bgImages(background)})` : "";
     return (
       <div
         className={classnames("theme-background-picker", { selected })}
         onClick={this.handleClick.bind(this)}
+        title="Theme Texture"
       >
         <span
           className="theme-background-picker__swatch"
@@ -72,20 +69,18 @@ class ThemeBackgroundPicker extends React.Component {
         <span className="theme-background-picker__text">Theme Texture</span>
         <div className="theme-background-picker__backgrounds">
           <div className="theme-background-picker__backgrounds-inner">
-            {bgImages
-              .keys()
-              .map((src, backgroundId) => (
-                <Background
-                  key={backgroundId}
-                  {...{
-                    src,
-                    backgroundId,
-                    accentcolor,
-                    setBackground,
-                    active: theme.images.headerURL === src
-                  }}
-                />
-              ))}
+            {bgImages.keys().map((src, backgroundId) => (
+              <Background
+                key={backgroundId}
+                {...{
+                  src,
+                  backgroundId,
+                  accentcolor,
+                  setBackground,
+                  active: theme.images.additional_backgrounds[0] === src
+                }}
+              />
+            ))}
           </div>
         </div>
       </div>

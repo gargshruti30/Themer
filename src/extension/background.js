@@ -1,19 +1,30 @@
 import { makeLog } from "../lib/utils";
-import { normalizeTheme, colorToCSS } from "../lib/themes";
+import {
+  normalizeTheme,
+  normalizeThemeBackground,
+  colorToCSS,
+  bgImages
+} from "../lib/themes";
 
 // Blank 1x1 PNG from http://png-pixel.com/
-const BLANK_IMAGE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+const BLANK_IMAGE =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 
 const log = makeLog("background");
-
-const bgImages = require.context("../images/patterns/", false, /bg-.*\.svg/);
 
 const siteUrl = process.env.SITE_URL;
 
 const init = () => {
-  browser.browserAction.onClicked.addListener(() =>
-    browser.tabs.create({ url: siteUrl })
-  );
+  browser.browserAction.onClicked.addListener(() => {
+    browser.tabs.query({ currentWindow: true }).then(tabs => {
+      const themerTab = tabs.find(tab => tab.url.includes(siteUrl));
+      if (themerTab) {
+        browser.tabs.update(themerTab.id, { active: true });
+      } else {
+        browser.tabs.create({ url: siteUrl });
+      }
+    });
+  });
   browser.runtime.onConnect.addListener(port => {
     port.onMessage.addListener(messageListener(port));
     port.postMessage({ type: "hello" });
@@ -50,22 +61,26 @@ const storeTheme = ({ theme }) => browser.storage.local.set({ theme });
 
 const applyTheme = ({ theme }) => {
   log("applyTheme", theme);
-  if (!theme) { return; }
-
-  const backgroundImage = bgImages.keys().includes(theme.images.headerURL)
-    ? bgImages(theme.images.headerURL)
-    : "images/patterns/bg-000.svg";
+  if (!theme) {
+    return;
+  }
 
   const newTheme = {
-    images: {
-      additional_backgrounds: [backgroundImage]
-    },
     properties: {
       additional_backgrounds_alignment: ["top"],
       additional_backgrounds_tiling: ["repeat"]
     },
     colors: {}
   };
+
+  const background = normalizeThemeBackground(
+    theme.images.additional_backgrounds[0]
+  );
+  if (background) {
+    newTheme.images = {
+      additional_backgrounds: [bgImages(background)]
+    };
+  }
 
   // the headerURL is required in < 60,
   // but it creates an ugly text shadow.
